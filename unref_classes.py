@@ -5,16 +5,24 @@ import os
 import re
 
 class UnrefClassesHandler(object):
-
-    # symbols = {}
-    # ref_classes = set()
-    # all_classes = set()
-
+    
     def __init__(self, path):
         self.symbols = {}
         self.ref_classes = set()
         self.all_classes = set()
         self.path = path
+
+    # add white list eg: third-party
+    def prefix_whitelist(self):
+        return ['PodsDummy_', 'RCT', 'TuSDK', 'JSQ', 'RAC', 'DOU',
+         'Alibc', 'GPUImage', 'JCORE', 'QQ', '_', 'UM', 'Baidu', 'JWT',
+         'DT', 'AliBC', 'WBSDK', 'WB', 'WV', 'WX']
+
+    def is_in_whitelist(self, symbol):
+        for p in self.prefix_whitelist():
+            if symbol.startswith(p):
+                return True
+        return False
 
     def pre_handle(self):
         self.symbols = self.class_symbols()
@@ -25,9 +33,14 @@ class UnrefClassesHandler(object):
         # diff
         self.all_classes.symmetric_difference
         diff_classes = self.ref_classes.difference(self.all_classes)
-        print len(diff_classes)
+        count = 0
         for c in diff_classes:
-            print self.symbols[c]
+            symbol = self.symbols[c]
+            if not self.is_in_whitelist(symbol):
+                print symbol
+                count += 1
+        print 'total: ', len(diff_classes)
+        print 'real unref classes count: ', count
 
     def rebase_pointers(self, line):
         line = line[16:].strip().split(' ')
